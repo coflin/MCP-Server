@@ -37,7 +37,7 @@ jobs:
       - name: Conditionally push config
         if: steps.ping_check.outcome == 'success'
         run: |
-          curl -X POST http://198.11.21.101:8000/push/config \
+          curl -X POST http://198.11.21.101:8000/configure/ospf \
             -H "Content-Type: application/json" \
             -d '{"device": "${{ steps.router.outputs.device }}", "config_file": "/home/sneha/MCP-Server/configs/${{ steps.router.outputs.config_file }}"}'
 
