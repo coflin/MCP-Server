@@ -1,0 +1,29 @@
+name: Push Config to Router
+
+on:
+  push:
+    paths:
+      - '**.cfg'
+
+jobs:
+  push-router-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout config repo
+        uses: actions/checkout@v3
+
+      - name: Extract changed router name
+        id: router
+        run: |
+          FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep .cfg | head -n1)
+          echo "Changed file: $FILE"
+          DEVICE=$(basename $FILE _ospf.cfg)
+          echo "device=${DEVICE}" >> $GITHUB_OUTPUT
+          echo "config_file=${FILE}" >> $GITHUB_OUTPUT
+
+      - name: Push config via MCP
+        run: |
+          curl -X POST http://198.11.21.101:8000/push/config \
+          -H "Content-Type: application/json" \
+          -d '{"device": "${{ steps.router.outputs.device }}", "config_file": "/home/sneha/MCP-Server/configs/${{ steps.router.outputs.config_file }}"}'
+
