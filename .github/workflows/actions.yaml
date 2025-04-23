@@ -37,7 +37,7 @@ jobs:
         run: |
           curl -X POST "$SLACK_WEBHOOK" \
           -H 'Content-type: application/json' \
-          --data '{"text":"📡 GitHub Actions triggered OSPF push to MCP. Sit back and relax 😌"}'
+          --data '{"text":"✅ GitHub Actions pushed the configuration via MCP. Sit back and relax 😌"}'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
