@@ -33,6 +33,14 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @ospf.json || true
 
+      - name: Notify on Slack
+        run: |
+          curl -X POST "$SLACK_WEBHOOK" \
+          -H 'Content-type: application/json' \
+          --data '{"text":"📡 GitHub Actions triggered OSPF push to MCP. Sit back and relax 😌"}'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
       - name: Mark job as successful
         run: echo "🎉 Done. GitHub Actions workflow completed successfully."
 
