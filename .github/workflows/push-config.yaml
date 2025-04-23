@@ -31,7 +31,7 @@ jobs:
 
     - name: Ping Device
       run: |
-        IP=$(curl -s "$MCP_URL/inventory/interface_ips?rtr=${{ steps.vars.outputs.device }}" | jq -r '.[].Management0 // .[].Ethernet1 // .[]')
+        IP=$(curl -s "$MCP_URL/inventory/interface_ips?rtr=$DEVICE" | jq -r '.[].Management0 // .[].Ethernet1 // .[]')
         echo "Pinging $IP..."
         ping -c 3 "$IP"
 
