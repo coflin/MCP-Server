@@ -1,0 +1,26 @@
+name: Trigger OSPF Config via MCP
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ospf.json'  # or wherever ChatGPT drops the intent
+
+jobs:
+  trigger_mcp:
+    runs-on: ubuntu-latest
+
+    env:
+      MCP_URL: http://198.11.21.101:8000
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Send OSPF JSON to MCP
+        run: |
+          echo "📨 Sending OSPF configuration request to MCP..."
+          curl -X POST "$MCP_URL/configure/ospf" \
+            -H "Content-Type: application/json" \
+            --data-binary @ospf.json
+
