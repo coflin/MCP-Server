@@ -31,8 +31,9 @@ jobs:
 
     - name: Ping Device
       run: |
+        DEVICE=${{ steps.vars.outputs.device }}
         IP=$(curl -s "$MCP_URL/inventory/interface_ips?rtr=$DEVICE" | jq -r '.[].Management0 // .[].Ethernet1 // .[]')
-        echo "Pinging $IP..."
+        echo "Resolved IP: $IP"
         ping -c 3 "$IP"
 
     - name: Push config to device
