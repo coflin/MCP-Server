@@ -2,7 +2,7 @@
   "routers": [
     {
       "hostname": "r1",
-      "loopback_ip": "10.10.10.10",
+      "loopback_ip": "1.1.1.1",
       "interfaces": [
         {
           "name": "Ethernet1",
