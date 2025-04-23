@@ -21,9 +21,27 @@ jobs:
           echo "device=${DEVICE}" >> $GITHUB_OUTPUT
           echo "config_file=${FILE}" >> $GITHUB_OUTPUT
 
-      - name: Push config via MCP
+      - name: Fetch router IP from MCP
+        id: fetch_ip
+        run: |
+          IP=$(curl -s "http://198.11.21.101:8000/inventory/interface_ips?rtr=${{ steps.router.outputs.device }}" | jq -r '.[].Management0 // .[].Ethernet1 // .[]')
+          echo "Router IP: $IP"
+          echo "ip=$IP" >> $GITHUB_OUTPUT
+
+      - name: Ping router
+        id: ping_check
+        run: |
+          ping -c 2 -W 2 ${{ steps.fetch_ip.outputs.ip }}
+        continue-on-error: true
+
+      - name: Conditionally push config
+        if: steps.ping_check.outcome == 'success'
         run: |
           curl -X POST http://198.11.21.101:8000/push/config \
-          -H "Content-Type: application/json" \
-          -d '{"device": "${{ steps.router.outputs.device }}", "config_file": "/home/sneha/MCP-Server/configs/${{ steps.router.outputs.config_file }}"}'
+            -H "Content-Type: application/json" \
+            -d '{"device": "${{ steps.router.outputs.device }}", "config_file": "/home/sneha/MCP-Server/configs/${{ steps.router.outputs.config_file }}"}'
+
+      - name: Skip push if ping failed
+        if: steps.ping_check.outcome != 'success'
+        run: echo "❌ Skipping push — device is unreachable."
 
