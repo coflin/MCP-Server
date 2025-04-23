@@ -17,6 +17,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      - name: Check if any .cfg exists
+        run: |
+          if compgen -G "configs/*.cfg" > /dev/null; then
+            echo "✅ Found .cfg files."
+          else
+            echo "❌ No .cfg files found. Exiting workflow."
+            exit 1
+          fi
+
       - name: Send OSPF JSON to MCP
         run: |
           echo "📨 Sending OSPF configuration request to MCP..."
