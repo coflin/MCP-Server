@@ -26,10 +26,11 @@ jobs:
 
       - name: Push all configs via MCP
         run: |
+          shopt -s nullglob
           for FILE in configs/*_ospf.cfg; do
             DEVICE=$(basename "$FILE" _ospf.cfg)
             echo "🚀 Pushing config for $DEVICE from $FILE"
-            curl -X POST $MCP_URL/push/config \
+            curl -v -X POST $MCP_URL/push/config \
               -H "Content-Type: application/json" \
               -d "{\"device\": \"$DEVICE\", \"config_file\": \"$FILE\"}"
           done
