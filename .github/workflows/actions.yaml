@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MCP_URL: http://198.11.21.101:8000
+      MCP_URL: https://a0c0-198-11-21-101.ngrok-free.app
 
     steps:
       - name: Checkout config repo
