@@ -1,47 +1,43 @@
-name: Trigger OSPF Config via MCP
+name: Push Config to Router via MCP
 
 on:
-  workflow_dispatch:
   push:
     paths:
-      - 'ospf.json'  # or wherever ChatGPT drops the intent
+      - 'configs/*.cfg'
 
 jobs:
-  trigger_mcp:
+  push-router-config:
     runs-on: ubuntu-latest
 
     env:
       MCP_URL: http://198.11.21.101:8000
 
     steps:
-      - name: Checkout repo
+      - name: Checkout config repo
         uses: actions/checkout@v3
 
-      - name: Check if any .cfg exists
+      - name: Extract changed router name
+        id: router
         run: |
-          if compgen -G "configs/*.cfg" > /dev/null; then
-            echo "✅ Found .cfg files."
-          else
-            echo "❌ No .cfg files found. Exiting workflow."
-            exit 1
-          fi
+          FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep .cfg | head -n1)
+          echo "Changed file: $FILE"
+          DEVICE=$(basename $FILE _ospf.cfg)
+          echo "device=${DEVICE}" >> $GITHUB_OUTPUT
+          echo "config_file=${FILE}" >> $GITHUB_OUTPUT
 
-      - name: Send OSPF JSON to MCP
+      - name: Push config via MCP
         run: |
-          echo "📨 Sending OSPF configuration request to MCP..."
-          curl --max-time 15 -X POST "$MCP_URL/configure/ospf" \
-            -H "Content-Type: application/json" \
-            --data-binary @ospf.json || true
+          curl -X POST $MCP_URL/push/config \
+          -H "Content-Type: application/json" \
+          -d '{
+            "device": "${{ steps.router.outputs.device }}",
+            "config_file": "configs/${{ steps.router.outputs.config_file }}"
+          }'
 
       - name: Notify on Slack
         run: |
           curl -X POST "$SLACK_WEBHOOK" \
           -H 'Content-type: application/json' \
-          --data '{"text":"✅ GitHub Actions pushed the configuration via MCP. Sit back and relax 😌"}'
+          --data '{"text":"✅ Config applied via MCP to router ${{ steps.router.outputs.device }}"}'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-
-      - name: Mark job as successful
-        run: echo "🎉 Done. GitHub Actions workflow completed successfully."
-
-
