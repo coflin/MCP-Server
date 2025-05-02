@@ -24,9 +24,9 @@ jobs:
           echo "$CHANGED"
           echo "$CHANGED" > changed_files.txt
 
-      - name: Push configs via MCP
+      - name: Push all configs via MCP
         run: |
-          for FILE in $(git diff --name-only HEAD~1 HEAD | grep 'configs/.*_ospf.cfg'); do
+          for FILE in configs/*_ospf.cfg; do
             DEVICE=$(basename "$FILE" _ospf.cfg)
             echo "🚀 Pushing config for $DEVICE from $FILE"
             curl -X POST $MCP_URL/push/config \
