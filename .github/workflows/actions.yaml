@@ -26,12 +26,12 @@ jobs:
 
       - name: Push configs via MCP
         run: |
-          for FILE in $(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'configs/.*_ospf.cfg'); do
-          DEVICE=$(basename "$FILE" _ospf.cfg)
-          echo "🚀 Pushing config for $DEVICE from $FILE"
-          curl -X POST $MCP_URL/push/config \
-            -H "Content-Type: application/json" \
-            -d "{\"device\": \"$DEVICE\", \"config_file\": \"$FILE\"}"
+          for FILE in $(git diff --name-only HEAD~1 HEAD | grep 'configs/.*_ospf.cfg'); do
+            DEVICE=$(basename "$FILE" _ospf.cfg)
+            echo "🚀 Pushing config for $DEVICE from $FILE"
+            curl -X POST $MCP_URL/push/config \
+              -H "Content-Type: application/json" \
+              -d "{\"device\": \"$DEVICE\", \"config_file\": \"$FILE\"}"
           done
 
       - name: Notify on Slack
