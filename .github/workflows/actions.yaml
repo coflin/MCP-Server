@@ -1,4 +1,4 @@
-name: Push Config to Router via MCP
+name: Push Configs to Routers via MCP
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - 'configs/*.cfg'
 
 jobs:
-  push-router-config:
+  push-router-configs:
     runs-on: ubuntu-latest
 
     env:
@@ -16,28 +16,28 @@ jobs:
       - name: Checkout config repo
         uses: actions/checkout@v3
 
-      - name: Extract changed router name
-        id: router
+      - name: Extract all changed router config files
+        id: changed
         run: |
-          FILE=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep .cfg | head -n1)
-          echo "Changed file: $FILE"
-          DEVICE=$(basename $FILE _ospf.cfg)
-          echo "device=${DEVICE}" >> $GITHUB_OUTPUT
-          echo "config_file=${FILE}" >> $GITHUB_OUTPUT
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep 'configs/.*_ospf.cfg' || true)
+          echo "Changed files:"
+          echo "$CHANGED"
+          echo "$CHANGED" > changed_files.txt
 
-      - name: Push config via MCP
+      - name: Push configs via MCP
         run: |
-          curl -X POST $MCP_URL/push/config \
-          -H "Content-Type: application/json" \
-          -d '{
-            "device": "${{ steps.router.outputs.device }}",
-            "config_file": "configs/${{ steps.router.outputs.config_file }}"
-          }'
+          while IFS= read -r FILE; do
+            DEVICE=$(basename "$FILE" _ospf.cfg)
+            echo "🚀 Pushing config for $DEVICE from $FILE"
+            curl -X POST $MCP_URL/push/config \
+              -H "Content-Type: application/json" \
+              -d "{\"device\": \"$DEVICE\", \"config_file\": \"$FILE\"}"
+          done < changed_files.txt
 
       - name: Notify on Slack
         run: |
           curl -X POST "$SLACK_WEBHOOK" \
           -H 'Content-type: application/json' \
-          --data '{"text":"✅ Config applied via MCP to router ${{ steps.router.outputs.device }}"}'
+          --data '{"text":"✅ All changed configs pushed via MCP to respective routers."}'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
